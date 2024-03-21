@@ -5,10 +5,17 @@ import paramiko
 import sys
 import select
 
-host_list = ['192.168.1.137', 'localhost']
-port = 22
-username = 'rompelhd'
-password = getpass.getpass("Introduce tu contraseña: ")
+# ------------- Config The Script ------------- #
+
+host_list = ['192.168.1.137', 'localhost'] # Hosts to which to collect information
+port = 22 # The ssh port, depending on the port you use, usually 22.
+username = 'rompelhd' # Change it for your user, you can create one to use for this purpose. "It can be that some data collection may fail due to lack of permissions for example the packages".
+password = '' # You can specify a password to facilitate the automated use of the script, it is not secure at the moment because it is in plain text.
+
+# --------------------------------------------- #
+
+if password == "":
+    password = getpass.getpass("Introduce tu contraseña: ")
 
 table_data = []
 cpu_usage = []
@@ -40,10 +47,11 @@ for host in host_list:
         stdin = shell.makefile('wb')
         stdout = shell.makefile('r')
 
-
-        if "--shell" in sys.argv or "-s" in sys.argv:
+        if "--al" in sys.argv:
+            stdin, stdout, stderr = client.exec_command("python3 /home/rompelhd/ServerConnect/main.py")
+        elif "--shell" in sys.argv or "-s" in sys.argv:
             ssh_client_remote(stdin, stdout, shell)
-        else:
+        elif len(sys.argv) == 1:
             stdin, stdout, stderr = client.exec_command("top -bn1 | grep 'Cpu(s)' | sed 's/.*, *\([0-9.]*\)%* id.*/\\1/'")
             cpu_usage.append(stdout.read().decode().strip())
 
@@ -72,4 +80,4 @@ headers = [Fore.RED + "Server IP" + Style.RESET_ALL, Fore.RED + "CPU Usage" + St
 if table_data:
     print(tabulate(table_data, headers, tablefmt="fancy_grid"))
 else:
-    print("No hay datos disponibles para imprimir.")
+    pass
